@@ -55,4 +55,21 @@ RUN mkdir -p /ccs_install /opt/ti /etc/udev/rules.d /etc/init.d && \
     rm -rf /ccs_install /tmp/*
 
 
+
+# PREBUILD rts430x_sc_sd_eabi.lib
+# We explicitly find mklib and add likely utils/bin paths for gmake
+RUN export COMPILER_DIR=$(find /opt/ti/ccs/tools/compiler -maxdepth 1 -type d -name "ti-cgt-msp430_*") && \
+    if [ -z "$COMPILER_DIR" ]; then echo "Error: Compiler not found"; exit 1; fi && \
+    echo "Found compiler at: $COMPILER_DIR" && \
+    export MKLIB_EXE=$(find "$COMPILER_DIR" -name mklib) && \
+    if [ -z "$MKLIB_EXE" ]; then echo "Error: mklib not found in $COMPILER_DIR"; exit 1; fi && \
+    echo "Found mklib at: $MKLIB_EXE" && \
+    # Add compiler bin and likely CCS utils bin (for gmake) to PATH
+    export PATH="$COMPILER_DIR/bin:/opt/ti/ccs/utils/bin:/opt/ti/ccs/eclipse:$PATH" && \
+    cd "$COMPILER_DIR/lib" && \
+    echo "Building rts430x_sc_sd_eabi.lib..." && \
+    "$MKLIB_EXE" --pattern=rts430x_sc_sd_eabi.lib && \
+    echo "Library built successfully at: $COMPILER_DIR/lib/rts430x_sc_sd_eabi.lib"
+
+
 RUN echo "CCS Install Complete. Version: ${MAJOR_VER}.${MINOR_VER}.${PATCH_VER}"
